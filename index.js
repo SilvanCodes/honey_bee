@@ -1,15 +1,16 @@
 const CONTEXT_2D = canvas.getContext('2d');
-const DELTA_TIME = 25; // ms
-const DEBUG = false;
+const DELTA_TIME = 250; // ms
+const DEBUG = true;
 const ANIMATE = false;
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 500;
 const PI = Math.PI;
 
 const C2D = CONTEXT_2D;
-const SPAN = 15;
 
-const UNIT = CANVAS_WIDTH / SPAN;
+let LEN = 7;
+let SPAN = LEN * 2 + 1;
+let UNIT = CANVAS_WIDTH / SPAN;
 
 function setup() {
     console.log('SETUP');
@@ -28,15 +29,33 @@ async function run() {
 
     vectorField.draw();
 
+    const l1 = new Landmark(new Vector2D(3.5, 2), 0.5);
+    const l2 = new Landmark(new Vector2D(3.5, -2), 0.5);
+    const l3 = new Landmark(new Vector2D(0, -4), 0.5);
 
-    const l1 = new Landmark(new Vector2D(3.5, 2));
-    const l2 = new Landmark(new Vector2D(3.5, -2));
-    const l3 = new Landmark(new Vector2D(0, -4));
+    const lms = new List(l1, l2, l3);
+    List.map(Landmark.draw)(lms);
 
-    const lms = [l1, l2, l3];
-    lms.map(Landmark.draw);
+    BEE = new Vector2D(-7, 7);
 
-    generateRetina(new Vector2D(-7, 7), lms);
+    generateRetina(BEE, lms);
+
+    /* document.addEventListener('click', ev => {
+        console.log('click');
+        C2D.clearRect(0, 0, canvas.width, canvas.height);
+
+        LEN = LEN + 1;
+        SPAN = LEN * 2 + 1;
+        UNIT = CANVAS_WIDTH / SPAN;
+
+        drawCanvasOutline();
+        new VectorField(SPAN).draw();
+
+        generateRetina(new Vector2D(-7, 7), lms);
+        lms.map(Landmark.draw);
+
+        console.log('ve')
+    }); */
 
     // describe dark spot on retina
     const spot = { from: new Vector2D(), to: new Vector2D() };
@@ -44,59 +63,62 @@ async function run() {
     // retina/snapshot is multiple spots, ordered
     const retina = [spot, spot, spot];
 
-
     // ANIMATION LOOP
     while (ANIMATE) {
         C2D.clearRect(0, 0, canvas.width, canvas.height);
 
         // animate here
+        drawCanvasOutline();
+        vectorField.draw();
+        List.map(Landmark.draw)(lms);
+        generateRetina(BEE, lms);
 
         await sleep(DELTA_TIME);
     }
 }
 
 function generateRetina(position, landmarks) {
-    const base = Grid.getCoordiantesOf(position);
-    const l = Grid.getCoordiantesOf(landmarks[0].position);
+    console.log('COMPUTE RETINA');
 
-    const edge1 = l.pipe(
-        V2D.sub(base),
-        // V2D.draw(),
-        Fnl.tap(console.log),
-        V2D.mult(new Vector2D(1, -1)),
-        Fnl.tap(console.log),
-        V2D.draw(),
-        V2D.resize(landmarks[0].radius),
-        V2D.draw(),
-        V2D.add(l),
-        V2D.draw(),
-        //V2D.add(base),
-        //V2D.draw(base)
+    const getVp = lm => cw => Fnl.compose(
+        V2D.sub(position),
+        V2D.rotate90(cw),
+        V2D.resize(lm.radius),
+        V2D.add(lm.position),
     );
 
-    const r = l.pipe(
-        V2D.sub(base),
-        V2D.mult(new Vector2D(-1, 1)),
-        V2D.resize(landmarks[0].radius),
+    // helper for visual debugging
+    const drawFromPos = Fnl.compose(
+        Grid.getCoordiantesOf,
+        V2D.draw(position.pipe(
+            Grid.getCoordiantesOf
+        ))
     );
 
-    r.pipe(
-        V2D.add({ x: 50, y: 50}),
-        V2D.draw({ x: 50, y: 50}),
-        Fnl.tap(console.log),
-        V2D.mult(new Vector2D(1, -1)),
-        Fnl.tap(console.log),
-        V2D.resize(landmarks[0].radius),
-        Fnl.tap(console.log),
-        V2D.draw({ x: 50, y: 50}),
+    const getVps = lm => new List(true, false).pipe(
+        List.map(getVp(lm)),
+        List.apply(lm.position)
     )
 
-    console.log('edge1', edge1);
+    let rv = landmarks.pipe(
+        List.map(getVps)
+    );
 
-    console.log('r', r);
+    rv.pipe(
+        List.flatten,
+        Fnl.tap(console.log),
+        List.mapWith(V2D.angleBetween),
+        Fnl.tap(console.log)
+    )
 
-    console.log('angle', V2D.angleTo(r)(l));
-
+    if (DEBUG) {
+        rv.pipe(
+            List.map(
+                List.map(drawFromPos)
+            )
+        );
+        console.log(rv);
+    }
 }
 
 function drawCanvasOutline() {

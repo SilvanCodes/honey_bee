@@ -29,13 +29,13 @@ class VectorField {
     _translateToIndex(point) {
         return point.pipe(
             V2D.multiply(new Vector2D(1, -1)),
-            V2D.add(new Vector2D(7, 7))
+            V2D.add(new Vector2D(LEN, LEN))
         );
     }
 
     _translateFromIndex(point) {
         return point.pipe(
-            V2D.sub(new Vector2D(7, 7)),
+            V2D.sub(new Vector2D(LEN, LEN)),
             V2D.mult(new Vector2D(1, -1)),
         );
     }
