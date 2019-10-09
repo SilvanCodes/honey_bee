@@ -1,7 +1,7 @@
 class Grid {
     static getCoordiantesOf(point) {
-        this._checkBounds(point);
-        const canvasPoint = this._translateToCanvas(point);
+        Grid._checkBounds(point);
+        const canvasPoint = Grid._translateToCanvas(point);
         return canvasPoint.pipe(
             V2D.scale(UNIT),
             V2D.add(new Vector2D(UNIT / 2, UNIT / 2))
@@ -16,8 +16,8 @@ class Grid {
     }
 
     static _checkBounds(point) {
-        this._checkBound(point.x);
-        this._checkBound(point.y);
+        Grid._checkBound(point.x);
+        Grid._checkBound(point.y);
     }
 
     static _checkBound(value) {

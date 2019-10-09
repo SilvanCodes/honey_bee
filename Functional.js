@@ -3,16 +3,20 @@
  */
 class Functional {
 
-    static tap(f){
+    static tap(f) {
         return x => { f(x); return x; };
     }
 
     static repeat(f, n) {
-        return x => n ? repeat(f, n-1)(f(x)) : x;
+        return x => n ? Functional.repeat(f, n-1)(f(x)) : x;
     }
 
     static compose(...fns){
         return x => fns.reduce((v, f) => f(v), x);
+    }
+
+    static map(f) {
+        return x => x.length ? x.map(f) : f(x);
     }
 
     pipe(...fns) {

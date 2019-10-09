@@ -46,7 +46,7 @@ class Vector2D extends Functional {
     }
 
     static sub(v2) {
-        return v1 => this.add(v2.inverse)(v1);
+        return v1 => Vector2D.add(v2.inverse)(v1);
     }
 
     static dot(v2) {
@@ -60,7 +60,7 @@ class Vector2D extends Functional {
 
     // gives absolute angle between v1 and v2
     static angleBetween(v2) {
-        return v1 => Math.acos(this.dot(v1)(v2) / (v1.norm * v2.norm));
+        return v1 => Math.acos(Vector2D.dot(v1)(v2) / (v1.norm * v2.norm));
     }
 
     static scale(s) {
@@ -71,7 +71,7 @@ class Vector2D extends Functional {
     }
 
     static resize(l) {
-        return v => this.scale(l / v.norm)(v);
+        return v => Vector2D.scale(l / v.norm)(v);
     }
 
     // draw vector from specified origin
