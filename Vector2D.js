@@ -31,6 +31,10 @@ class Vector2D extends Functional {
         );
     }
 
+    static rotate90(clockwise = true) {
+        return v => clockwise ? new Vector2D(v.y, -v.x) : new Vector2D(-v.y, v.x);
+    }
+
     static add(v2) {
         return v1 => new Vector2D(
             v1.x + v2.x,
