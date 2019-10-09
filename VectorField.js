@@ -1,11 +1,11 @@
 class VectorField {
-    constructor(span) {
+    constructor(span, value = new Vector2D(1, 1)) {
         this.span = span;
         this.bound = (span - 1) / 2;
 
         this._field = Array.from({ length: this.span }).fill(
             Array.from({ length: this.span }).fill(
-                new Vector2D(1, 1),
+                value,
                 0,
                 this.span
             ),
