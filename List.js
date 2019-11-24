@@ -23,4 +23,8 @@ class List extends Functional {
     static flatten(l) {
         return new List(...l._list.reduce((acc, val) => acc.concat(val._list), []));
     }
+
+    static toArray(l) {
+        return Array.from(l._list);
+    }
 }
