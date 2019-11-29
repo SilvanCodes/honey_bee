@@ -92,6 +92,10 @@ class Vector2D extends Functional {
         );
     }
 
+    static proximity(epsilon) {
+        return v2 => v => v.x > v2.x - epsilon && v.x < v2.x + epsilon && v.y > v2.y - epsilon && v.y < v2.y + epsilon;
+    }
+
     static resize(l) {
         return v => Vector2D.scale(l / v.norm)(v);
     }
