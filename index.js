@@ -4,6 +4,11 @@ const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 500;
 const PI = Math.PI;
 
+const ANIMATE = false;
+const FPS = 1;
+const EPSILON = .05;
+const STEP = .01;
+
 const C2D = CONTEXT_2D;
 
 let LEN = 7;
@@ -62,13 +67,60 @@ function generate(bee, wanted, lms, draw = false) {
 
     const posTurn = V2D.sum(turningVectors);
 
-    const homing = V2D.sum([stretchSum, posTurn]);
+    let homing = V2D.sum([stretchSum, posTurn]);
 
     if (draw) console.log('homing vector', homing.toString())
+
+    //homing = flyAround(homing, darkMatched)
 
     return homing;
 }
 
+function flyAround(homing, darkMatched) {
+    const vectors = [];
+
+    for (const sec of darkMatched) {
+        const vecBee = V2D.fromRad(sec.bee.rad);
+
+        // rechts negativ / links positiv
+        const rad = V2D.angleTo(vecBee)(homing);
+        console.log(rad)
+
+        // determine the turn direction
+        const clockwise = rad > 0 ? false : true;
+        let temp = V2D.rotate90(clockwise)(homing);
+
+        // inverse the direction if the angle is larger than 180 degrees
+        let bla = 1;
+        if (Math.abs(rad) < 1.2) bla = 2;
+        temp = V2D.scale(sec.bee.size * bla)(temp);
+
+        vectors.push(temp);
+    }
+
+    return V2D.sum([...vectors, homing]);
+}
+
+async function startAnimation(start, dest, lms) {
+    let done = false;
+    while (!done) {
+        C2D.clearRect(0, 0, canvas.width, canvas.height);
+
+        // animate here
+        drawCanvasOutline();
+        List.map(Landmark.draw)(lms);
+
+        const homing = generate(start, dest, lms, true)
+
+        newStart = homing.pipe(
+            V2D.scale(STEP),
+            V2D.add(start),
+        );
+
+        newStart.pipe(
+            Grid.getCoordiantesOf,
+            V2D.draw(start.pipe(Grid.getCoordiantesOf), 6),
+        );
 
 function drawVectorfield(wanted, lms, ignored) {
     const resolution = .2;
@@ -130,13 +182,17 @@ async function run() {
     const lms = new List(...landmarks.map(l => new Landmark(l, 0.5)));
     List.map(Landmark.draw)(lms);
 
-    bee = new Vector2D(-4, -6);
+    bee = new Vector2D(7, -7);
     wanted = new Vector2D(0, 0);
 
-    //generate(bee, wanted, lms, true);
+    //generate(bee, wanted, lms, true)
 
-    const ignored = [...landmarks, wanted]
-    drawVectorfield(wanted, lms, ignored);
+    const done = false
+    if (ANIMATE) startAnimation(bee, wanted, lms);
+    else {
+        const ignored = [...landmarks, wanted]
+        drawVectorfield(wanted, lms, ignored);
+    }
 }
 
 function generateRetina(position, landmarks, draw = false) {
