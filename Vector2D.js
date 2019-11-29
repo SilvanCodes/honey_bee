@@ -101,20 +101,20 @@ class Vector2D extends Functional {
     }
 
     // draw vector from specified origin
-    static draw({ x, y } = new Vector2D()) {
+    static draw({ x, y } = new Vector2D(), tipSize = 3) {
         return v => {
 
             const tip1 = v.pipe(
                 V2D.sub(new Vector2D(x, y)),
-                V2D.rotate(3/4*PI),
-                V2D.resize(3),
+                V2D.rotate(3 / 4 * PI),
+                V2D.resize(tipSize),
                 V2D.add(v),
             );
 
             const tip2 = v.pipe(
                 V2D.sub(new Vector2D(x, y)),
-                V2D.rotate(-3/4*PI),
-                V2D.resize(3),
+                V2D.rotate(-3 / 4 * PI),
+                V2D.resize(tipSize),
                 V2D.add(v),
             );
 
