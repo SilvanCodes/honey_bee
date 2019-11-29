@@ -1,5 +1,5 @@
 class VectorField {
-    constructor(span, value = new Vector2D(1, 1)) {
+    constructor(span, value = new Vector2D(0, 0)) {
         this.span = span;
         this.bound = (span - 1) / 2;
         this._field = [];

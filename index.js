@@ -68,37 +68,27 @@ function generate(bee, wanted, lms, draw = false) {
     return homing;
 }
 
-async function run() {
+function drawVectorfield(wanted, lms, ignored) {
     const vectorField = new VectorField(SPAN);
-
-    drawCanvasOutline();
-
-    const l1 = new Landmark(new Vector2D(3.5, 2), 0.5);
-    const l2 = new Landmark(new Vector2D(3.5, -2), 0.5);
-    const l3 = new Landmark(new Vector2D(0, -4), 0.5);
-
-    const lms = new List(l1, l2, l3);
-    List.map(Landmark.draw)(lms);
-
-    BEE = new Vector2D(-4, 6);
-    WANTED = new Vector2D(0, 0);
-
-    generate(BEE, WANTED, lms, true);
 
     // generate vector field
     const diffs = [];
     for (let i = -LEN; i <= LEN; i++) {
         for (let ii = -LEN; ii <= LEN; ii++) {
             const curr = new Vector2D(i, ii);
-            const home = generate(curr, WANTED, lms);
+
+            const found = ignored.find(v => v.x == curr.x && v.y == curr.y);
+            if (found) continue;
+
+            const home = generate(curr, wanted, lms);
 
             // resize vector for displaying
-            const homeUnit = V2D.resize(LEN * 1.3)(home);
+            const homeUnit = V2D.resize(75 / LEN)(home);
 
             // calculate the difference between a direct vector
-            const algoRad = V2D.angleTo(E1)(home);
-            const directRad = V2D.angleTo(E1)(new Vector2D(-i, -ii));
-            diffs.push(Math.abs(Math.abs(algoRad) - Math.abs(directRad)))
+            const diff = V2D.angleBetween(home)(new Vector2D(-i, -ii))
+
+            diffs.push(diff)
 
             vectorField.setValueAt(curr, homeUnit);
         }
@@ -111,6 +101,27 @@ async function run() {
     console.log('homing precision in degree', averageDiffDeg);
 
     vectorField.draw();
+}
+
+async function run() {
+
+    drawCanvasOutline();
+
+    const l1 = new Vector2D(3.5, 2);
+    const l2 = new Vector2D(3.5, -2);
+    const l3 = new Vector2D(0, -4);
+    const landmarks = [l1, l2, l3];
+
+    const lms = new List(...landmarks.map(l => new Landmark(l, 0.5)));
+    List.map(Landmark.draw)(lms);
+
+    bee = new Vector2D(-4, -6);
+    wanted = new Vector2D(0, 0);
+
+    //generate(bee, wanted, lms, true);
+
+    const ignored = [...landmarks, wanted]
+    drawVectorfield(wanted, lms, ignored);
 }
 
 function generateRetina(position, landmarks, draw = false) {
@@ -158,6 +169,8 @@ function generateRetina(position, landmarks, draw = false) {
 
     const spots = plain.map(([stop, start]) => ({ start, stop }));
 
+    const actualSpots = spots;
+    /*
     // remove overlapping spots
     const actualSpots = [];
 
@@ -178,6 +191,7 @@ function generateRetina(position, landmarks, draw = false) {
 
         actualSpots.push(spot);
     }
+    */
     
 
     if (draw) {
@@ -255,7 +269,7 @@ function calculatePositionVectors(sectors) {
     const vectors = [];
 
     for (const sec of sectors) {
-        let vec = V2D.fromRad(sec.matched.rad);
+        let vec = V2D.fromRad(sec.bee.rad);
         // inverse direction of vector if bee size is bigger than matched size
         if (sec.bee.size > sec.matched.size) vec = vec.inverse;
 
@@ -277,7 +291,7 @@ function calculateTurningVectors(sectors) {
 
         // determine the turn direction
         const clockwise = rad > 0 ? false : true;
-        let temp = V2D.rotate90(clockwise)(vecWanted);
+        let temp = V2D.rotate90(clockwise)(vecBee);
 
         // inverse the direction if the angle is larger than 180 degrees
         if (sec.bee.size > PI) temp = temp.inverse;
