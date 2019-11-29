@@ -1,7 +1,8 @@
 class VectorField {
-    constructor(span, value = new Vector2D(0, 0)) {
+    constructor(span, resolution = 1, value = new Vector2D(0, 0)) {
         this.span = span;
         this.bound = (span - 1) / 2;
+        this.resolution = resolution;
         this._field = [];
 
         for (let i = 0; i < this.span; i++) {
@@ -21,21 +22,32 @@ class VectorField {
 
     setValueAt(point, value) {
         this._checkForIndex(point);
+        console.log(`point: ${point}`);
         const { x, y } = this._translateToIndex(point);
-        this._field[x][y] = value;
+        console.log(`x: ${x}, y: ${y}`);
+        const [ x1, y1 ] = [ x, y ].map(v => Math.floor(v + 0.1));
+        console.log(`x1: ${x1}, y1: ${y1}`);
+        this._field[x1][y1] = value;
     }
 
     _translateToIndex(point) {
         return point.pipe(
             V2D.mult(new Vector2D(1, -1)),
-            V2D.add(new Vector2D(LEN, LEN))
+            V2D.add(new Vector2D(LEN, LEN)),
+            V2D.scale(1 / this.resolution)
         );
+    }
+
+    round(number) {
+        return Number((Math.round(number * 1 / this.resolution) * this.resolution).toFixed(2));
     }
 
     _translateFromIndex(point) {
         return point.pipe(
+            V2D.scale(this.resolution),
             V2D.sub(new Vector2D(LEN, LEN)),
             V2D.mult(new Vector2D(1, -1)),
+            v => new Vector2D(this.round(v.x), this.round(v.y))
         );
     }
 
@@ -54,7 +66,7 @@ class VectorField {
     }
 
     _checkValue(value) {
-        this._checkIsIndex(value);
+        // this._checkIsIndex(value);
         this._checkBound(value);
     }
 

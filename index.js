@@ -1,11 +1,8 @@
 const CONTEXT_2D = canvas.getContext('2d');
+const INFO = info;
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 500;
 const PI = Math.PI;
-const ANIMATE = false;
-const FPS = 60;
-const EPSILON = .05;
-const STEP = .001;
 
 const C2D = CONTEXT_2D;
 
@@ -72,47 +69,27 @@ function generate(bee, wanted, lms, draw = false) {
     return homing;
 }
 
-async function startAnimation(start, dest, lms) {
-    let done = false;
-    while (!done) {
-        C2D.clearRect(0, 0, canvas.width, canvas.height);
-
-        // animate here
-        drawCanvasOutline();
-        List.map(Landmark.draw)(lms);
-
-        const homing = generate(start, dest, lms, true)
-
-
-        newStart = homing.pipe(
-            V2D.scale(STEP),
-            V2D.add(start),
-        );
-
-        newStart.pipe(
-            Grid.getCoordiantesOf,
-            V2D.draw(start.pipe(Grid.getCoordiantesOf), 6),
-        );
-
-        start = newStart;
-
-        if (V2D.proximity(EPSILON)(dest)(start)) {
-            done = true;
-            console.log('@HOME');
-        }
-
-        await sleep(1 / FPS * 1000);
-    }
-}
 
 function drawVectorfield(wanted, lms, ignored) {
-    const vectorField = new VectorField(SPAN);
+    const resolution = .2;
+    const len = LEN * Math.round(1 / resolution);
+    const span = len * 2 + 1;
+    console.log(`len: ${len}, span: ${span}`)
+
+    const vectorField = new VectorField(span, resolution);
+
+    // const vectorField = new VectorField(SPAN);
+
+    // set at .5 steps -> span = LEN * (1 / .5) + 1
+
+    // vec value is i * .5
 
     // generate vector field
     const diffs = [];
-    for (let i = -LEN; i <= LEN; i++) {
-        for (let ii = -LEN; ii <= LEN; ii++) {
-            const curr = new Vector2D(i, ii);
+    for (let i = -len; i <= len; i++) {
+        for (let ii = -len; ii <= len; ii++) {
+            const curr = new Vector2D(vectorField.round(i * resolution), vectorField.round(ii * resolution));
+            console.log(`curr: ${curr}`);
 
             const found = ignored.find(v => v.x == curr.x && v.y == curr.y);
             if (found) continue;
@@ -134,8 +111,9 @@ function drawVectorfield(wanted, lms, ignored) {
     const averageDiffRad = diffs.reduce((a, b) => a + b, 0) / diffs.length;
     const averageDiffDeg = averageDiffRad * 180 / PI;
 
-    document.getElementById('info').innerHTML = `Homing precision in degree: ${averageDiffDeg.toFixed(2)}`
+    INFO.innerHTML = `Homing precision in degree: ${averageDiffDeg.toFixed(2)}`;
     console.log('homing precision in degree', averageDiffDeg);
+
 
     vectorField.draw();
 }
@@ -152,15 +130,13 @@ async function run() {
     const lms = new List(...landmarks.map(l => new Landmark(l, 0.5)));
     List.map(Landmark.draw)(lms);
 
-    bee = new Vector2D(6, -4);
+    bee = new Vector2D(-4, -6);
     wanted = new Vector2D(0, 0);
 
-    const done = false
-    if (ANIMATE) startAnimation(bee, wanted, lms);
-    else {
-        const ignored = [...landmarks, wanted]
-        drawVectorfield(wanted, lms, ignored);
-    }
+    //generate(bee, wanted, lms, true);
+
+    const ignored = [...landmarks, wanted]
+    drawVectorfield(wanted, lms, ignored);
 }
 
 function generateRetina(position, landmarks, draw = false) {
@@ -231,7 +207,7 @@ function generateRetina(position, landmarks, draw = false) {
         actualSpots.push(spot);
     }
     */
-    
+
 
     if (draw) {
         rv.pipe(
@@ -255,14 +231,14 @@ function makeBisectorRepresentation(snapshot) {
     freeBisectors = [];
     objectBisectors = [];
     for (let idx = 0; idx < snapshot.length; idx++) {
-        objectBisectors.push(getMidValue(snapshot[idx].start, snapshot[idx].stop, true));
-        freeBisectors.push(getMidValue(snapshot[idx].stop, snapshot[(idx + 1) % snapshot.length].start, false));
+        objectBisectors.push(getMidValue(snapshot[idx].start, snapshot[idx].stop));
+        freeBisectors.push(getMidValue(snapshot[idx].stop, snapshot[(idx + 1) % snapshot.length].start));
     }
 
     return [objectBisectors, freeBisectors];
 }
 
-function getMidValue(start, stop, object) {
+function getMidValue(start, stop) {
     let size = V2D.angleBetweenDir(V2D.fromRad(start))(V2D.fromRad(stop));
     // determine when to use the larger angle
     if (size < 0) size = PI * 2 + size;
@@ -272,7 +248,7 @@ function getMidValue(start, stop, object) {
     let rad = (start + stop) / 2;
     if (rad > PI) rad -= PI * 2;
 
-    return { rad, size, object };
+    return { rad, size };
 }
 
 
@@ -298,7 +274,7 @@ function matchSnapshot(bee, wanted) {
             }
         }
 
-        matched.push({ bee: angle, matched: closest, object: angle.object });
+        matched.push({ bee: angle, matched: closest });
     }
 
     return matched;
@@ -334,7 +310,6 @@ function calculateTurningVectors(sectors) {
 
         // inverse the direction if the angle is larger than 180 degrees
         if (sec.bee.size > PI) temp = temp.inverse;
-
         vectors.push(temp);
     }
 
