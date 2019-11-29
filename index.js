@@ -8,6 +8,7 @@ const ANIMATE = false;
 const FPS = 1;
 const EPSILON = .05;
 const STEP = .01;
+const RESOLUTION = .2;
 
 const C2D = CONTEXT_2D;
 
@@ -84,7 +85,6 @@ function flyAround(homing, darkMatched) {
 
         // rechts negativ / links positiv
         const rad = V2D.angleTo(vecBee)(homing);
-        console.log(rad)
 
         // determine the turn direction
         const clockwise = rad > 0 ? false : true;
@@ -121,27 +121,21 @@ async function startAnimation(start, dest, lms) {
             Grid.getCoordiantesOf,
             V2D.draw(start.pipe(Grid.getCoordiantesOf), 6),
         );
+    }
+}
 
 function drawVectorfield(wanted, lms, ignored) {
-    const resolution = .2;
+    const resolution = RESOLUTION;
     const len = LEN * Math.round(1 / resolution);
     const span = len * 2 + 1;
-    console.log(`len: ${len}, span: ${span}`)
 
     const vectorField = new VectorField(span, resolution);
-
-    // const vectorField = new VectorField(SPAN);
-
-    // set at .5 steps -> span = LEN * (1 / .5) + 1
-
-    // vec value is i * .5
 
     // generate vector field
     const diffs = [];
     for (let i = -len; i <= len; i++) {
         for (let ii = -len; ii <= len; ii++) {
             const curr = new Vector2D(vectorField.round(i * resolution), vectorField.round(ii * resolution));
-            console.log(`curr: ${curr}`);
 
             const found = ignored.find(v => v.x == curr.x && v.y == curr.y);
             if (found) continue;

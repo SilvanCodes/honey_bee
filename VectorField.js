@@ -22,11 +22,8 @@ class VectorField {
 
     setValueAt(point, value) {
         this._checkForIndex(point);
-        console.log(`point: ${point}`);
         const { x, y } = this._translateToIndex(point);
-        console.log(`x: ${x}, y: ${y}`);
         const [ x1, y1 ] = [ x, y ].map(v => Math.floor(v + 0.1));
-        console.log(`x1: ${x1}, y1: ${y1}`);
         this._field[x1][y1] = value;
     }
 
