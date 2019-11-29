@@ -1,7 +1,9 @@
 const CONTEXT_2D = canvas.getContext('2d');
+const INFO = info;
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 500;
 const PI = Math.PI;
+
 const ANIMATE = false;
 const FPS = 1;
 const EPSILON = .05;
@@ -120,25 +122,26 @@ async function startAnimation(start, dest, lms) {
             V2D.draw(start.pipe(Grid.getCoordiantesOf), 6),
         );
 
-        start = newStart;
-
-        if (V2D.proximity(EPSILON)(dest)(start)) {
-            done = true;
-            console.log('@HOME');
-        }
-
-        await sleep(1 / FPS * 1000);
-    }
-}
-
 function drawVectorfield(wanted, lms, ignored) {
-    const vectorField = new VectorField(SPAN);
+    const resolution = .2;
+    const len = LEN * Math.round(1 / resolution);
+    const span = len * 2 + 1;
+    console.log(`len: ${len}, span: ${span}`)
+
+    const vectorField = new VectorField(span, resolution);
+
+    // const vectorField = new VectorField(SPAN);
+
+    // set at .5 steps -> span = LEN * (1 / .5) + 1
+
+    // vec value is i * .5
 
     // generate vector field
     const diffs = [];
-    for (let i = -LEN; i <= LEN; i++) {
-        for (let ii = -LEN; ii <= LEN; ii++) {
-            const curr = new Vector2D(i, ii);
+    for (let i = -len; i <= len; i++) {
+        for (let ii = -len; ii <= len; ii++) {
+            const curr = new Vector2D(vectorField.round(i * resolution), vectorField.round(ii * resolution));
+            console.log(`curr: ${curr}`);
 
             const found = ignored.find(v => v.x == curr.x && v.y == curr.y);
             if (found) continue;
@@ -160,8 +163,9 @@ function drawVectorfield(wanted, lms, ignored) {
     const averageDiffRad = diffs.reduce((a, b) => a + b, 0) / diffs.length;
     const averageDiffDeg = averageDiffRad * 180 / PI;
 
-    document.getElementById('info').innerHTML = `Homing precision in degree: ${averageDiffDeg.toFixed(2)}`
+    INFO.innerHTML = `Homing precision in degree: ${averageDiffDeg.toFixed(2)}`;
     console.log('homing precision in degree', averageDiffDeg);
+
 
     vectorField.draw();
 }
@@ -259,7 +263,7 @@ function generateRetina(position, landmarks, draw = false) {
         actualSpots.push(spot);
     }
     */
-    
+
 
     if (draw) {
         rv.pipe(
@@ -283,14 +287,14 @@ function makeBisectorRepresentation(snapshot) {
     freeBisectors = [];
     objectBisectors = [];
     for (let idx = 0; idx < snapshot.length; idx++) {
-        objectBisectors.push(getMidValue(snapshot[idx].start, snapshot[idx].stop, true));
-        freeBisectors.push(getMidValue(snapshot[idx].stop, snapshot[(idx + 1) % snapshot.length].start, false));
+        objectBisectors.push(getMidValue(snapshot[idx].start, snapshot[idx].stop));
+        freeBisectors.push(getMidValue(snapshot[idx].stop, snapshot[(idx + 1) % snapshot.length].start));
     }
 
     return [objectBisectors, freeBisectors];
 }
 
-function getMidValue(start, stop, object) {
+function getMidValue(start, stop) {
     let size = V2D.angleBetweenDir(V2D.fromRad(start))(V2D.fromRad(stop));
     // determine when to use the larger angle
     if (size < 0) size = PI * 2 + size;
@@ -300,7 +304,7 @@ function getMidValue(start, stop, object) {
     let rad = (start + stop) / 2;
     if (rad > PI) rad -= PI * 2;
 
-    return { rad, size, object };
+    return { rad, size };
 }
 
 
@@ -326,7 +330,7 @@ function matchSnapshot(bee, wanted) {
             }
         }
 
-        matched.push({ bee: angle, matched: closest, object: angle.object });
+        matched.push({ bee: angle, matched: closest });
     }
 
     return matched;
@@ -362,7 +366,6 @@ function calculateTurningVectors(sectors) {
 
         // inverse the direction if the angle is larger than 180 degrees
         if (sec.bee.size > PI) temp = temp.inverse;
-
         vectors.push(temp);
     }
 
