@@ -2,16 +2,15 @@ class VectorField {
     constructor(span, value = new Vector2D(1, 1)) {
         this.span = span;
         this.bound = (span - 1) / 2;
+        this._field = [];
 
-        this._field = Array.from({ length: this.span }).fill(
-            Array.from({ length: this.span }).fill(
-                value,
-                0,
-                this.span
-            ),
-            0,
-            this.span
-        );
+        for (let i = 0; i < this.span; i++) {
+            this._field[i] = [];
+            for (let ii = 0; ii < this.span; ii++) {
+                this._field[i][ii] = value;
+            }
+        }
+
     }
 
     getValueAt(point) {
@@ -28,7 +27,7 @@ class VectorField {
 
     _translateToIndex(point) {
         return point.pipe(
-            V2D.multiply(new Vector2D(1, -1)),
+            V2D.mult(new Vector2D(1, -1)),
             V2D.add(new Vector2D(LEN, LEN))
         );
     }
@@ -77,11 +76,15 @@ class VectorField {
     draw() {
         this._field.forEach((column, x) => {
             column.forEach((row, y) => {
-                const center = Grid.getCoordiantesOf(this._translateFromIndex(new Vector2D(x, y)));
+
+                const center = Grid.getCoordiantesOf(
+                    this._translateFromIndex(new Vector2D(x, y)),
+                );
 
                 row.pipe(
+                    V2D.mult(new Vector2D(1, -1)),
                     V2D.add(center),
-                    V2D.draw(center)    
+                    V2D.draw(center)
                 );
             })
         });
