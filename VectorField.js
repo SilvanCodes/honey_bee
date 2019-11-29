@@ -93,6 +93,7 @@ class VectorField {
                 row.pipe(
                     V2D.mult(new Vector2D(1, -1)),
                     V2D.add(center),
+                    v => { v.color = row.color; return v; },
                     V2D.draw(center)
                 );
             })

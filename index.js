@@ -1,7 +1,7 @@
 const CONTEXT_2D = canvas.getContext('2d');
 const INFO = info;
-const CANVAS_WIDTH = 500;
-const CANVAS_HEIGHT = 500;
+const CANVAS_WIDTH = 800;
+const CANVAS_HEIGHT = 800;
 const PI = Math.PI;
 
 const ANIMATE = false;
@@ -9,6 +9,7 @@ const FPS = 1;
 const EPSILON = .05;
 const STEP = .01;
 const RESOLUTION = .2;
+const HOME_VECTOR_DISPLAY_BASE_LENGTH = 50;
 
 const C2D = CONTEXT_2D;
 
@@ -131,8 +132,11 @@ function drawVectorfield(wanted, lms, ignored) {
 
     const vectorField = new VectorField(span, resolution);
 
+    const conversion = 255 / 20;
+
     // generate vector field
     const diffs = [];
+
     for (let i = -len; i <= len; i++) {
         for (let ii = -len; ii <= len; ii++) {
             const curr = new Vector2D(vectorField.round(i * resolution), vectorField.round(ii * resolution));
@@ -142,14 +146,17 @@ function drawVectorfield(wanted, lms, ignored) {
 
             const home = generate(curr, wanted, lms);
 
+            const colorAmount = home.norm * conversion;
+
             // resize vector for displaying
-            const homeUnit = V2D.resize(75 / LEN)(home);
+            const homeUnit = V2D.resize(HOME_VECTOR_DISPLAY_BASE_LENGTH / LEN)(home);
 
             // calculate the difference between a direct vector
             const diff = V2D.angleBetween(home)(new Vector2D(-i, -ii))
 
-            diffs.push(diff)
+            diffs.push(diff);
 
+            homeUnit.color = `rgb(${colorAmount}, 0, ${255-colorAmount}, .7)`;
             vectorField.setValueAt(curr, homeUnit);
         }
     }

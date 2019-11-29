@@ -3,6 +3,7 @@ class Vector2D extends Functional {
         super();
         this.x = x;
         this.y = y;
+        this.color = '#f0f0f0';
     }
 
     // computed data props
@@ -101,7 +102,7 @@ class Vector2D extends Functional {
     }
 
     // draw vector from specified origin
-    static draw({ x, y } = new Vector2D(), tipSize = 3) {
+    static draw({ x, y } = new Vector2D(), tipSize = 2) {
         return v => {
 
             const tip1 = v.pipe(
@@ -118,7 +119,7 @@ class Vector2D extends Functional {
                 V2D.add(v),
             );
 
-            C2D.fillStyle = '#f0f0f0';
+            C2D.strokeStyle = v.color;
             C2D.beginPath();
             C2D.moveTo(x, y);
             C2D.lineTo(v.x, v.y);
