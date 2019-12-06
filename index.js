@@ -5,7 +5,7 @@ const CANVAS_HEIGHT = 800;
 const PI = Math.PI;
 
 const ANIMATE = false;
-const FPS = 1;
+const FPS = 10;
 const EPSILON = .05;
 const STEP = .01;
 const RESOLUTION = .2;
@@ -122,6 +122,15 @@ async function startAnimation(start, dest, lms) {
             Grid.getCoordiantesOf,
             V2D.draw(start.pipe(Grid.getCoordiantesOf), 6),
         );
+
+        start = newStart;
+
+        if (V2D.proximity(EPSILON)(dest)(start)) {
+            done = true;
+            console.log('@HOME');
+        }
+
+        await sleep(1 / FPS * 1000);
     }
 }
 
@@ -183,7 +192,7 @@ async function run() {
     const lms = new List(...landmarks.map(l => new Landmark(l, 0.5)));
     List.map(Landmark.draw)(lms);
 
-    bee = new Vector2D(7, -7);
+    bee = new Vector2D(7, 7);
     wanted = new Vector2D(0, 0);
 
     //generate(bee, wanted, lms, true)
